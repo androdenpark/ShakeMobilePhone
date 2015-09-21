@@ -1,0 +1,173 @@
+* {
+	text-align: center;
+	font-family: "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-weight: 300;
+	color: #ececec;
+}
+
+html {
+	font-size: 0.9em;
+	box-sizing: border-box;
+}
+
+*, *:before, *:after {
+	box-sizing: inherit;
+}
+
+body {
+	background-image: linear-gradient(to bottom right, #2d3f4a, #1d3649);
+	margin: 0;
+	padding: 0;
+}
+
+h1, h3 {
+	font-family: "Helvetica Neue Bold", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+
+h1 {
+	font-size: 1.4rem;
+	margin: 0.1em 0;
+	padding-top: 0.5em;
+}
+
+h2 {
+	font-size: 1.4rem;
+	margin-top: 0.1em;
+}
+
+h3 {
+	font-size: 1.2rem;
+	margin: 1.2em 0 0.5em 0;
+}
+
+p {
+	font-size: 1rem;
+	margin: 0.1em 0;
+}
+
+input {
+	color: #000;
+	width:14.3rem;
+	font-size:1rem;
+}
+
+
+input#submitBut{
+	width:auto;
+}
+
+
+.welcomeTitle{
+	background-color:#FF34B3;
+	font-size:1.5rem;
+	width:100%;
+	margin:0 0 0 0;
+
+}
+
+.historyGraph{
+	position:absolute;
+	top:2rem;
+	background-color:#FF34B3;
+	width:100%;
+}
+
+
+.outer-main {
+	position: relative;
+}
+
+.main {
+	margin: 0px 0.7% 0 0.7%;
+}
+
+
+
+button{
+	color:#fff;
+	padding:5px 24px;
+	width:auto;
+	height:auto;
+	border:1px #ffffff solid;
+	font-size:1.1rem;
+	background-color:#1d3649;
+}
+
+
+.operationButton{
+	width:100%;
+	margin:2% 0 0% 0;
+	height:2rem;
+	text-align:center;
+}
+
+.operationButton button.leftButton{
+	position:absolute;
+	width:45%;
+	left:0.7%;
+}
+
+.operationButton button.rightButton{
+	position:absolute;
+	width:45%;
+	right:0.7%;
+}
+
+.trail.left {
+	bottom: 0;
+	top: 41%;
+	left: 5%;
+}
+
+.trail.right {
+	top: 0;
+	bottom: 51%;
+	right: 5%;
+}
+
+
+img{
+	margin:0 0 0 0;
+	width:100%;
+	height:auto;
+	overflow:hidden;
+}
+
+
+.data-table {
+	width: 100%;
+	background-color: #ececec;
+	margin:0 0 0 0;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.data-table * {
+	color: #1d3649;
+}
+
+.data-table th {
+	font-family: "HelvNeue Bold for IBM", "HelveticaNeue-Bold", "Helvetica Neue Bold", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-weight: bold;
+}
+
+.data-table tr.table-title {
+	background-color: #fff;
+	font-size: 1.1rem;
+}
+
+
+.data-table th, .data-table td {
+	padding: 0.5rem 0 0.5rem 0;
+}
+
+
+
+
+.iot-footer {
+	position:relative;
+	height: 3rem;
+	margin: 0 0.7% 0 0.7%;
+	overflow: hidden;
+}
+

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Access-Control-Allow-Origin" content="*">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+
+	<title>IOT Platform Mobile Demo</title>
+	<link rel='stylesheet' href='/shakemobilegame/static/stylesheets/device.css' />
+	<script type="text/javascript" src="/shakemobilegame/static/js/jscharts.js"></script>
+</head>
+
+<body style="background-image:url('/shakemobilegame/static/img/background.jpg')">
+<div class="outer-main">
+	<div class="trail left"></div>
+	<div class="trail right"></div>
+
+	<div class="main">
+		<div class="welcomeTitle">
+			<p></p>
+			<label>Your Device ID </label>
+			<label style="font-size:1.3rem;" id='theID'>{{ID}}</label>
+			<h2></h2>
+		</div>
+
+		<table style="width:100%;font-size:1.5rem;">
+			<tr style="height:3rem;">
+				<th style="background-color:#FF00FF;"  id="motion" onclick="selectEvent(event)">Acceleration</th>
+				<th style="background-color:#FF00FF;"  id="orientation" onclick="selectEvent(event)">Orientation</th>
+			</tr>
+		</table>
+			
+
+		<div style="margin:1rem 0 0 0;">
+			<table class="data-table">
+				<tr class="table-title"><th colspan="3">Selected Sensor Readings</th></tr>
+				<tr class="data-title">
+					<th  id="dataOneTitle">Data One</th>
+					<th  id="dataTwoTitle">Data Two</th>
+					<th  id="dataThreeTitle">Data Three</th>
+				</tr>
+
+				<tr>
+					<td id="dataOne">0</td>
+					<td id="dataTwo">0</td>
+					<td id="dataThree">0</td>
+				</tr>
+				
+				<tr>
+					<td id="dataOneSend">0</td>
+					<td id="dataTwoSend">0</td>
+					<td id="dataThreeSend">0</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="operationButton">
+			<button style="width:100%;border-radius:3px;font-size:1.5rem;"  id="transBut" onclick="setTransFlag()" >START</button>
+		</div>
+	</div>
+
+</div>
+
+
+	<div class="iot-footer">
+	</div>
+
+
+
+
+
+
+
+<script>
+
+var transFlag = false;
+var currentSelectedID="";
+
+function selectEvent(event){
+	var selectEventName="device"+event.target.id;
+	
+	if(!isThisSensorSupported(selectEventName)){
+		return;
+	}
+
+	selectEventID(event.target.id);
+	currentEventManager(event.target.id);
+}
+
+//var p = navigator.platform;
+//if p.indexOf("Win") == 0 : is windows
+
+var userID =  document.getElementById("theID").innerHTML;
+var heartBeatInterval=2000;
+var sensorDataArray = new Array();
+
+window.onload=startHeartBeat;
+
+
+function osCheck(){
+        osPlatform = navigator.platform;
+        if(osPlatform.indexOf("Win") == 0 || osPlatform.indexOf("Mac") == 0){
+                window.location = "../sorry";
+        }
+}
+
+function startHeartBeat(){
+	osCheck();
+	currentEventManager("motion");
+	currentSelectedID="motion";
+	selectEventID("motion");
+	
+	beatTimer=setInterval("heartBeat()",heartBeatInterval);
+}
+
+var sendValueDisplayIDArray=["dataOneSend","dataTwoSend","dataThreeSend"];
+function heartBeat(){
+
+	if(!transFlag){
+		return;
+	}
+	
+	var xmlhttp;
+	if(window.XMLHttpRequest){
+		xmlhttp = new XMLHttpRequest();
+	}else{
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+
+	xmlhttp.onreadystatechange=function(){
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(xmlhttp.responseText.indexOf('Error')>0){
+					alert(xmlhttp.responseText);
+				}
+		}
+	}
+
+	xmlhttp.open('POST', '../demo_dataPost/', true);
+	xmlhttp.withCredentials = true;
+	var data2Send = new FormData();
+	data2Send.append("postStreamData","");
+	data2Send.append("deviceID", userID);
+	data2Send.append("content",JSON.stringify(sensorDataArray));
+	xmlhttp.send(data2Send);
+	
+	for(var key in sensorDataArray){
+		document.getElementById(sendValueDisplayIDArray[key]).innerHTML=sensorDataArray[key]["value"];
+	}
+}
+
+
+var lastTime = new Date().getTime();
+
+function isRefreshTimeReaches(){
+	var currentTime = new Date().getTime();
+	var timeDelta = parseInt(currentTime - lastTime);
+	if (timeDelta < 30){
+		return false;
+	}
+	lastTime = currentTime;
+	return true;		
+
+}
+
+
+function deviceOrientationHandler(eventData){
+	if(!isRefreshTimeReaches()){
+		return;
+	}
+
+	alpha_str=eventData.alpha.toFixed(2);
+	beta_str=eventData.beta.toFixed(2);
+	gamma_str=eventData.gamma.toFixed(2);
+
+	document.getElementById("dataOne").innerHTML=alpha_str;
+	document.getElementById("dataTwo").innerHTML=beta_str;
+	document.getElementById("dataThree").innerHTML=gamma_str;
+
+	sensorDataArray=new Array();
+
+	var streamOne=new Object();
+	streamOne.name="orientation_alpha";
+	streamOne.value=alpha_str;
+	sensorDataArray.push(streamOne);	
+
+	var streamTwo=new Object();
+	streamTwo.name="orientation_beta";
+	streamTwo.value=beta_str;
+	sensorDataArray.push(streamTwo);
+
+	var streamThree=new Object();
+	streamThree.name="orientation_gamma";
+	streamThree.value=gamma_str;
+	sensorDataArray.push(streamThree);
+}
+
+function deviceMotionHandler(eventData) {
+
+	if(!isRefreshTimeReaches()){
+		return;
+	}
+	
+       	var acceleration =eventData.accelerationIncludingGravity;	
+	
+	var xData=acceleration.x.toFixed(2) ;
+	var yData=acceleration.y.toFixed(2) ;
+	var zData=(acceleration.z +9.8).toFixed(2);
+
+	document.getElementById("dataOne").innerHTML=xData;
+	document.getElementById("dataTwo").innerHTML=yData;
+	document.getElementById("dataThree").innerHTML=zData;
+
+	sensorDataArray=new Array();
+	
+	var streamOne=new Object();
+	streamOne.name="acceleration_x";
+	streamOne.value=xData;
+	sensorDataArray.push(streamOne);	
+
+	var streamTwo=new Object();
+	streamTwo.name="acceleration_y";
+	streamTwo.value=yData;
+	sensorDataArray.push(streamTwo);
+
+	var streamThree=new Object();
+	streamThree.name="acceleration_z";
+	streamThree.value=zData;
+	sensorDataArray.push(streamThree);
+}
+
+
+
+
+function changeDataTitle(titleOne, titleTwo, titleThree){
+	document.getElementById("dataOneTitle").innerHTML=titleOne;
+	document.getElementById("dataTwoTitle").innerHTML=titleTwo;
+	document.getElementById("dataThreeTitle").innerHTML=titleThree;
+}
+
+
+
+function selectEventID(theID){
+	document.getElementById(currentSelectedID).style.backgroundColor="#FF00FF";
+	document.getElementById(theID).style.backgroundColor="#FF7F00";
+	if(theID == "motion"){
+		changeDataTitle("X Direction","Y Direction","Z Direction");
+		return;
+	}
+	
+	if(theID == "orientation"){
+		changeDataTitle("alpha","beta","gamma");
+		return;
+	}
+	else{
+		changeDataTitle("test","test","test");
+	}
+}	
+
+var deviceEventNameArray=["devicemotion","deviceorientation"];
+var deviceEventHandleArray=[deviceMotionHandler, deviceOrientationHandler]; 
+var deviceEventTypeArray=[window.DeviceMotionEvent, window.DeviceOrientationEvent];
+
+function isThisSensorSupported(theEventName){
+	
+	var theEventIndex = deviceEventNameArray.indexOf(theEventName);
+	if(!deviceEventTypeArray[theEventIndex]){
+		alert("sorry, the broswer you are using  doesn't support this sensor!");
+		return false;
+	}
+	return true;
+}
+
+function currentEventManager(selectedID){
+	var currentEventName="device"+currentSelectedID;
+	var theEventName="device"+selectedID;
+	if(currentEventName == theEventName){
+		return;
+	}
+	var theEventIndex = deviceEventNameArray.indexOf(theEventName);
+
+	var currentEventIndex = deviceEventNameArray.indexOf(currentEventName);
+	window.removeEventListener(currentEventName,deviceEventHandleArray[currentEventIndex]);
+	window.addEventListener(theEventName,deviceEventHandleArray[theEventIndex], false);		
+	currentSelectedID=selectedID;
+}
+
+
+function setTransFlag(){
+	transFlag= !transFlag;
+	if(transFlag){
+		document.getElementById("transBut").innerHTML="STOP";
+	}else{
+		document.getElementById("transBut").innerHTML="START";
+	}
+}
+
+
+
+</script>
+
+</body>
+</html>
+
+
+
+

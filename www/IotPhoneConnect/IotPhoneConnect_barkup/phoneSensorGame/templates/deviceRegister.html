@@ -1,0 +1,178 @@
+
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>IOT Platform Mobile Demo</title>
+    <link rel='stylesheet' href='/static/stylesheets/device.css' />    
+</head>
+
+<body width="100px" height="100px>
+
+<div class="outer-main">
+	<div class="trail left"></div>
+	<div class="trail right"></div>
+	<tr></tr>
+	<img  src="/static/img/header3.jpg"   style="vertical-align:middle">	
+	<div class="main">
+		<form  action='../shakephonegame/shakeYourPhone/' method="post" name='postForm'>
+		{% csrf_token %}
+		<label>your name</label>
+		<input type="text" name="theName" id="userName"   value="" />
+		<p></p>	
+		<label>device ID</label>
+		<input type="text" name="theID" id="userID"  readonly="readonly" value="" />		
+		<p></p>	
+		<label>register time</label>
+		<input type="text" name="registerTime" id="timeofRegister"  readonly="readonly" value="" />		
+		<p></p>	
+		<input type="submit" value='Enter'  onclick="formSubmit(event)" id="submitBut"/>
+		</form>
+	</div>
+
+
+	<div class="main">
+		<h3 >Do not have an ID? click the following button to apply one</h3>
+		<button id="registerBut" onclick="registerUser()">get an ID</button>
+	</div>
+	
+	<div class="iot-footer-pad"></div>
+</div>
+
+<script>
+
+var userID = "";
+var deviceRegisterTime="";
+
+//var registerStatus=false;
+
+function formSubmit(event){
+	if(!formCheck()){
+		stopDefault(event);
+		stopBubble(event);	
+		return false;
+	}
+	saveUserInfo();
+	
+	//document.getElementById("userID").value=userID;
+	return true;	
+}
+
+function stopDefault(event){
+	if(event && event.preventDefault){
+	event.preventDefault();
+	}else if(window.event && window.event.returnValue){
+		window.eventReturnValue=false;
+	
+	}
+	
+}
+
+function stopBubble(event){
+	if(event && event.stopPropagation){
+	event.stopPropagation();
+	}else{
+	window.event.cancelBubble=true;
+	}
+}
+
+
+function formCheck(){
+	try{
+		var userNameObj=document.getElementById("userName");
+		if(userNameObj.value.length < 2){
+			alert("your input name is too short!");
+			userNameObj.focus();
+			return false;
+		}
+		if(document.getElementById("userID").value.length < 1){
+			alert("your device does not have an id now, please register first!");
+			return false;			
+		}
+
+		return true;
+	}catch(exception){
+		return false;
+	}
+}
+
+
+function registerUser(){
+	document.getElementById("registerBut").disabled = true;
+	var xmlhttp;
+	if(window.XMLHttpRequest){
+		xmlhttp = new XMLHttpRequest();
+	}else{
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	
+	xmlhttp.onreadystatechange=function(){
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(xmlhttp.responseText.indexOf('Expired')<0){		
+					deviceRegisterTime=xmlhttp.responseText.split("%")[1];
+					userID = xmlhttp.responseText.split("%")[0];				
+					document.getElementById("userID").value = userID;
+					document.getElementById("timeofRegister").value =deviceRegisterTime;
+					//saveUserInfo();
+					//registerStatus =true;
+					//document.getElementById("submitBut").disabled=false;
+					alert("your device registered success, device ID: "+document.getElementById("userID").value);
+				}else{
+					alert("sorry, failed to get an ID, try again later!");
+				}
+			
+		}
+
+		document.getElementById("registerBut").disabled = false;
+	}
+	xmlhttp.open('POST', '../dataPost/', true);
+	xmlhttp.withCredentials = true;
+	var data2Send = new FormData();
+	data2Send.append('deviceIDRequest',"");
+	data2Send.append('deviceID',userID);
+	data2Send.append('registerTime',deviceRegisterTime );
+	xmlhttp.send(data2Send);
+}
+
+
+function saveUserInfo(){
+	document.cookie="IBMuserInfo="+document.getElementById("userName").value+"%"+userID+"%"+deviceRegisterTime;
+}
+
+
+window.onload=loadUserInfo;
+
+function loadUserInfo(){
+	//document.getElementById("userID").type="hidden";
+	try{
+	var allcookies=document.cookie;
+	var namePos=allcookies.indexOf("IBMuserInfo=");
+	if(namePos != -1){
+		var start = namePos+"userName=".length;
+		var end =allcookies.indexOf(";", start);
+		if(end == -1){
+		end=allcookies.length;
+		}
+		stringGet=allcookies.substring(start,end).split("%");
+		if(stringGet.length ==3){
+			document.getElementById("userName").value=(stringGet[0].split("="))[1];
+			userID = stringGet[1];
+			deviceRegisterTime=stringGet[2];
+			document.getElementById("userID").value=stringGet[1];
+			document.getElementById("timeofRegister").value=stringGet[2];
+			return;
+		}		
+	}}catch(exception){
+		alert("No device ID, please click the <Register> button to get one");
+	}
+
+}
+
+
+</script>
+
+</body>
+</html>
+

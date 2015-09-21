@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="Access-Control-Allow-Origin" content="*">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+
+	<title>IOT Platform Mobile Demo</title>
+	<link rel='stylesheet' href='/shakemobilegame/static/stylesheets/device.css' />
+</head>
+
+<body >
+<div class="outer-main">
+	<div class="trail left"></div>
+	<div class="trail right"></div>
+
+	<div class="main">
+		<div class="welcomeTitle">
+			<p></p>
+			<label>Welcome </label>
+			<label><span id="theName"><strong>{{name}}</strong></span><label>
+			<p></p>
+
+			<p>
+			<label>Device ID:</label>
+			<label id='theID'><strong>{{ID}}</strong></label>
+			</p>
+		</div>
+		<div>
+			<img id="theImg" src="/shakemobilegame/static/img/header3.jpg">
+		</div>
+
+		<table class="data-table">
+			<tr class="table-title"><th id='command' colspan="3">Now shake your phone to see what can you get?</th></tr>
+			<tr class="data-title">
+				<th>Current</th>
+				<th>Best</th>
+				<th>Rank</th>
+			</tr>
+
+			<tr>
+				<td id="theScore"></td>
+				<td id="bestScore"></td>
+				<td id="rankValue"></td>
+			</tr>
+
+		</table>
+
+		<div class="operationButton">
+			<button class="leftButton" onclick="startPlay()" id="startBut"><strong>START</strong></button>
+			<button class="rightButton" onclick="stopPlay()" id="stopBut"><strong>STOP</strong></button>
+		</div>
+
+		<div>
+			<h2>!Notice that when you click the STOP button, your score will be cleared and stored in IOT database platform to rank with other players</h2>
+			<p></p>
+			<p></p>
+			<p></p>
+			<p></p>
+			<label style="position:absolute;left:0;">Get your history scores form the database</h2>
+	
+			<button id="historyBut"  style="width:120px;height:45px;">HISTORY</button>
+		</div>
+
+			<h2>What is going on actrually?</h2>
+			<h3>we based on a sensor placed in your phone, here are their real-time readings</h3>	
+		<table class="data-table">
+			<tr class="table-title"><th colspan="3">Accelaration Sensor Readings</th></tr>
+			<tr class="data-title">
+				<th>X Direction</th>
+				<th>Y Direction</th>
+				<th>Z Direction</th>
+			</tr>
+
+			<tr>
+				<td id="xCurrentValue"></td>
+				<td id="yCurrentValue"></td>
+				<td id="zCurrentValue"></td>
+			</tr>
+
+		</table>
+
+	</div>
+
+</div>
+
+
+	<div class="iot-footer">
+			<label style="position:absolute;bottom:0;color:#333333;">This website is developed by IBM CRL, all rights reserverd!</label>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+var userID =  document.getElementById("theID").innerHTML;
+var theHighestScore=0;
+
+document.getElementById("bestScore").innerHTML= theHighestScore.toString();
+
+var playingFlag=false;
+var beatTimer=0;
+var heartBeatInterval=2000;
+//[Speed, Score,MaxValue,MinValue]
+var xList=[0,0], yList=[0,0], zList=[0,0];
+var lastTime=0;
+
+var xdataArray=new Array();
+var ydataArray=new Array();
+var zdataArray=new Array();
+
+window.onload=startHeartBeat;
+
+function startHeartBeat(){
+	heartBeatInterval=3000;
+	beatTimer=setInterval("heartBeat()",heartBeatInterval);
+}
+
+
+function heartBeat(){
+
+	//if(document.hidden){
+	//stopPlay();
+	//}
+
+	if(!playingFlag ){
+		return;
+	}else{
+		processCurrentData();
+	}
+	theHighestScore=maxValue>theHighestScore?maxValue:theHighestScore;
+	document.getElementById("theScore").innerHTML= maxValue.toString();
+	document.getElementById("bestScore").innerHTML= theHighestScore.toString();
+}
+
+
+function resetCollectionData(){
+
+	xList[0]=0;
+ 	yList[0]=0;
+ 	zList[0]=0;
+
+	xList[1]=0;
+ 	yList[1]=0;
+ 	zList[1]=0;
+	
+	xdataArray=new Array();
+	ydataArray=new Array();
+	zdataArray=new Array();
+}
+
+function processCurrentData(){
+
+	var lastValue=xdataArray[0]-xList[0];
+	var currentValue=xdataArray[0]-xList[0];
+	//var debugInfo=""
+	for( var index in xdataArray){
+		currentValue=xdataArray[index]-xList[0];
+		//debugInfo += currentValue.toFixed(3)+",";
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		xList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+	//document.getElementById("xdebug").innerHTML=debugInfo;
+
+	lastValue=ydataArray[0]-yList[0];
+	currentValue=ydataArray[0]-yList[0];
+	for( var index in ydataArray){
+		currentValue=ydataArray[index]-yList[0];
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		yList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+
+	lastValue=zdataArray[0]-zList[0];
+	currentValue=zdataArray[0]-zList[0];
+	for( var index in zdataArray){
+		currentValue=zdataArray[index]-zList[0];
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		zList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+
+	maxValue=(xList[1]+yList[1]+zList[1])*5;	
+	resetCollectionData();
+	
+}
+
+
+
+
+ function deviceMotionHandler(eventData) {
+
+	var currentTime = new Date().getTime();
+	var timeDelta = parseInt(currentTime-lastTime);
+	lastTime = currentTime;
+
+	if(xdataArray.length>50 ||  timeDelta<30){
+	return;
+	}
+	
+       	var acceleration =eventData.accelerationIncludingGravity;	
+	
+	var xData=acceleration.x ;
+	var yData=acceleration.y ;
+	var zData=acceleration.z +9.8;
+
+	document.getElementById("xCurrentValue").innerHTML=xData.toFixed(2);
+	document.getElementById("yCurrentValue").innerHTML=yData.toFixed(2);
+	document.getElementById("zCurrentValue").innerHTML=zData.toFixed(2);
+	
+	if(playingFlag){
+		xList[0]  = (xList[0]*xdataArray.length+xData)/(xdataArray.length+1);
+		yList[0]  = (yList[0]*ydataArray.length+yData)/(ydataArray.length+1);
+		zList[0]  = (zList[0]*zdataArray.length+zData)/(zdataArray.length+1);
+
+		xdataArray.push(xData);
+		ydataArray.push(yData);
+		zdataArray.push(zData);
+	}
+	
+}
+
+
+function startPlay(){
+	document.getElementById("startBut").disabled=true;
+	document.getElementById("stopBut").disabled=false;
+
+	resetCollectionData();
+    	if (window.DeviceMotionEvent) {
+        	window.addEventListener('devicemotion',deviceMotionHandler, false);
+		playingFlag=true;
+		lastTime=new Date().getTime();  
+    	}else{
+		alert("your device doesn't support this play!");
+    	}
+}
+
+function stopPlay(){
+	document.getElementById("stopBut").disabled=true;
+	document.getElementById("startBut").disabled=false;
+
+	if(!playingFlag){
+	return;
+	}
+	playingFlag=false;
+	resetScore();
+}
+
+function resetScore(){
+	var xmlhttp;
+	if(window.XMLHttpRequest){
+		xmlhttp = new XMLHttpRequest();
+	}else{
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+	xmlhttp.onreadystatechange=function(){
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200){
+alert(xmlhttp.responseText);
+				if(xmlhttp.responseText.indexOf('Error')<0){
+						rankResult = xmlhttp.responseText.split("%");	
+						document.getElementById("rankValue").innerHTML= rankResult[0]+"st of "+rankResult[1];
+
+						if (rankResult[0] ==1){
+							document.getElementById("command").innerHTML="Great,you are the first!";
+						}
+						else{
+							document.getElementById("command").innerHTML="try harder to get a better score!";
+						}		
+				}else{
+					alert("Lose connection with server, try to login again!");
+					window.location = "../deviceRegister";
+				}
+			
+		}
+	}
+
+	try{
+		xmlhttp.open('POST', '../dataPost/', true);
+		xmlhttp.withCredentials = true;
+		var data2Send = new FormData();
+		data2Send.append('postScore',"");
+		data2Send.append('theID', userID)
+		data2Send.append('scoreData',theHighestScore);
+		xmlhttp.send(data2Send);
+	}catch(exception){
+		alert("Lose connection with server, try to login again!");
+		window.location = "../deviceRegister";
+	}	
+}
+
+
+</script>
+
+
+
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>IOT Platform Mobile Register</title>
+    <link rel='stylesheet' href='/shakemobilegame/static/stylesheets/device.css' />    
+</head>
+
+<body >
+
+<div class="outer-main">
+	<div class="trail left"></div>
+	<div class="trail right"></div>
+	<tr></tr>
+	<img  src="/shakemobilegame/static/img/header3.jpg"   style="vertical-align:middle">	
+	<div class="main">
+		<form  action='../shakeYourPhone/' method="post" name='postForm'>
+		{% csrf_token %}
+		<label>Your Name</label>
+		<p></p>	
+		<input type="text" name="theName" id="userName"   value="" />
+		<p></p>	
+		<label>Device ID</label>
+		<p></p>	
+		<input type="text" name="theID" id="userID"  readonly="readonly" value="" />		
+		<p></p>	
+		<input type="submit" value='Login' id="submitBut"/>
+		</form>
+	</div>
+
+
+	<div class="main">
+		<h3 >Do not have an ID? click the following button to apply one</h3>
+		<button id="registerBut">Get an ID</button>
+	</div>
+	
+</div>
+	<div class="iot-footer"></div>
+
+	<script type="text/javascript" src="/shakemobilegame/static/js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="/shakemobilegame/static/js/deviceRegister.js"></script>
+</body>
+</html>
+

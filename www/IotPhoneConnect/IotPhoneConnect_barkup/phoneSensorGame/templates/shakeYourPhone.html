@@ -1,0 +1,324 @@
+
+
+
+<html>
+<head>
+<title>IOT Platform Mobile Demo</title>
+<link rel='stylesheet' href='/static/stylesheets/device.css' />
+</head>
+
+<body width="100px" height="100px>
+<div class="outer-main">
+	<div class="trail left"></div>
+	<div class="trail right"></div>
+
+	<div id="main" class="main">
+
+		<label>Welcome </label>
+		<label><span id="theName">{{name}}</span><label>
+		<p></p>
+
+		<p>
+		<label>Device ID:</label>
+		<label id='theID'>{{ID}}</label>
+		</p>
+
+		<p> your score will refresh every 2 seconds </p>
+		<p> your score is based on how frequency you change your phone's moving direction, so the more harder you shake your phone, the better score you will get </p>
+		
+		<h2>now start to try it by klicking the start button, we will calculate your score and rank it with other players</h2>
+
+		<p>
+		<label>your score:</label>
+		<label id='theScore'>#</label>
+		</p>
+
+		<p>
+		<label>your best score:</label>
+		<label id='bestScore'>#</label>
+		</p>
+
+		<p>
+		<label>your rank:</label>
+		<label id='rankValue'>#</label>
+		<label id='command'>NO</label>
+		</p>
+
+		<p>
+		<button onclick="startPlay()" id="startBut">START</button>
+		<button onclick="stopPlay()" id="stopBut">STOP</button>
+		</p>
+
+		<label>x:</label><label id="xCurrentValue"></label>
+<p></p>
+		<label>y:</label><label id="yCurrentValue"></label>
+<p></p>
+		<label>z:</label><label id="zCurrentValue"></label>
+<p></p>
+
+
+
+
+
+
+
+	</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+var userID =  document.getElementById("theID").innerHTML;
+
+document.getElementById("theID").innerHTML=userID.split("%")[0];
+
+var playingFlag=false;
+var beatTimer=0;
+var heartBeatInterval=2000;
+//[Speed, Score,MaxValue,MinValue]
+var xList=[0,0], yList=[0,0], zList=[0,0];
+var lastTime=0;
+
+var xdataArray=new Array();
+var ydataArray=new Array();
+var zdataArray=new Array();
+
+window.onload=startHeartBeat;
+
+function startHeartBeat(){
+	if (userID.indexOf("INVALID")<0){
+		heartBeatInterval=10000*Math.random()+10000;
+		beatTimer=setInterval("heartBeat()",heartBeatInterval);
+	}else{
+		alert("the User Number Expires, try later!");
+		window.location = "../deviceRegister";
+	}
+}
+
+
+function heartBeat(){
+
+	//if(document.hidden){
+	//stopPlay();
+	//}
+
+	if(!playingFlag ){
+		maxValue=0;
+	}else{
+		processCurrentData();
+	}
+
+	maxValue = maxValue.toString();
+
+	document.getElementById("theScore").innerHTML= maxValue;
+	
+	var xmlhttp;
+	if(window.XMLHttpRequest){
+		xmlhttp = new XMLHttpRequest();
+	}else{
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+
+	xmlhttp.onreadystatechange=function(){
+		if(xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(xmlhttp.responseText.indexOf('login')<0){
+					if(playingFlag){											
+						rankResult = xmlhttp.responseText.split("%");	
+						document.getElementById("bestScore").innerHTML= rankResult[2];
+						document.getElementById("rankValue").innerHTML= rankResult[0]+"st of "+rankResult[1];
+
+						if (rankResult[0] ==1){
+							document.getElementById("command").innerHTML="Great,you are the first!";
+						}
+						else{
+							document.getElementById("command").innerHTML="try harder to get a better score!";
+						}		
+					}
+				}else{
+					alert(xmlhttp.responseText);
+					window.location = "../deviceRegister";
+				}
+			
+		}
+	}
+
+	try{
+		xmlhttp.open('POST', '../dataPost/', true);
+		xmlhttp.withCredentials = true;
+		var data2Send = new FormData();
+		data2Send.append('heartBeat',userID);
+		data2Send.append('score',maxValue);
+		xmlhttp.send(data2Send);
+	}catch(exception){
+		alert("Lose connection with server, try to login again!");
+		window.location = "../deviceRegister";
+	}	
+}
+
+
+function resetCollectionData(){
+
+	xList[0]=0;
+ 	yList[0]=0;
+ 	zList[0]=0;
+
+	xList[1]=0;
+ 	yList[1]=0;
+ 	zList[1]=0;
+	
+	xdataArray=new Array();
+	ydataArray=new Array();
+	zdataArray=new Array();
+}
+
+function processCurrentData(){
+
+	var lastValue=xdataArray[0]-xList[0];
+	var currentValue=xdataArray[0]-xList[0];
+	//var debugInfo=""
+	for( var index in xdataArray){
+		currentValue=xdataArray[index]-xList[0];
+		//debugInfo += currentValue.toFixed(3)+",";
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		xList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+	//document.getElementById("xdebug").innerHTML=debugInfo;
+
+	lastValue=ydataArray[0]-yList[0];
+	currentValue=ydataArray[0]-yList[0];
+	for( var index in ydataArray){
+		currentValue=ydataArray[index]-yList[0];
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		yList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+
+	lastValue=zdataArray[0]-zList[0];
+	currentValue=zdataArray[0]-zList[0];
+	for( var index in zdataArray){
+		currentValue=zdataArray[index]-zList[0];
+		if(currentValue*lastValue < 0 && Math.abs(currentValue) >0.1 ){
+		zList[1] +=1;
+		lastValue=currentValue;
+		}
+		
+	}
+
+	maxValue=(xList[1]+yList[1]+zList[1])*5;	
+	resetCollectionData();
+	
+}
+
+
+
+
+ function deviceMotionHandler(eventData) {
+
+	var currentTime = new Date().getTime();
+	var timeDelta = parseInt(currentTime-lastTime);
+	lastTime = currentTime;
+
+	if(xdataArray.length>50 ||  timeDelta<30){
+	return;
+	}
+	
+        	var acceleration =eventData.accelerationIncludingGravity;	
+	
+	var xData=acceleration.x ;
+	var yData=acceleration.y ;
+	var zData=acceleration.z +9.8;
+
+	document.getElementById("xCurrentValue").innerHTML=xData.toFixed(2);
+	document.getElementById("yCurrentValue").innerHTML=yData.toFixed(2);
+	document.getElementById("zCurrentValue").innerHTML=zData.toFixed(2);
+
+	xList[0]  = (xList[0]*xdataArray.length+xData)/(xdataArray.length+1);
+	yList[0]  = (yList[0]*ydataArray.length+yData)/(ydataArray.length+1);
+	zList[0]  = (zList[0]*zdataArray.length+zData)/(zdataArray.length+1);
+
+	xdataArray.push(xData);
+	ydataArray.push(yData);
+	zdataArray.push(zData);
+	
+}
+
+
+function startPlay(){
+	document.getElementById("startBut").disabled=true;
+	document.getElementById("stopBut").disabled=false;
+
+	resetCollectionData();
+    	if (window.DeviceMotionEvent) {
+        		window.addEventListener('devicemotion',deviceMotionHandler, false);
+		clearInterval(beatTimer);
+		heartBeatInterval=2000;
+		beatTimer=setInterval("heartBeat()",heartBeatInterval);
+		playingFlag=true;
+		lastTime=new Date().getTime();  
+		heartBeat();
+    	}else{
+		alert("your device doesn't support this play!");
+    	}
+}
+
+function stopPlay(){
+	document.getElementById("stopBut").disabled=true;
+	document.getElementById("startBut").disabled=false;
+
+	if(!playingFlag){
+	return;
+	}
+	window.removeEventListener('devicemotion',deviceMotionHandler, false);
+	playingFlag=false;
+	clearInterval(beatTimer);
+	resetScore();
+	startHeartBeat();
+}
+
+function resetScore(){
+	var xmlhttp;
+	if(window.XMLHttpRequest){
+		xmlhttp = new XMLHttpRequest();
+	}else{
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+	xmlhttp.open('POST', '../dataPost/', true);
+	xmlhttp.withCredentials = true;
+	var data2Send = new FormData();
+	data2Send.append('heartBeat',userID);
+	data2Send.append('score',0);
+	data2Send.append('reset',true);
+	xmlhttp.send(data2Send);
+}
+
+
+</script>
+
+
+
+</body>
+</html>
+
+
+
+
